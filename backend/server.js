@@ -5,6 +5,8 @@ const cors = require("cors");
 const homeRoutes = require("./routes/homeRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require('./routes/adminRoutes');
+const productRoutes = require('./routes/productRoutes');
+
 
 
 const app = express(); // ✅ FIXED: Moved `app` initialization to the top
@@ -23,6 +25,7 @@ connectDB();
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/homepage", homeRoutes);
+app.use('/api', productRoutes);
 
 
 // Server Listening
