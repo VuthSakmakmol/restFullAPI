@@ -1,61 +1,75 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const DataType = require('../models/DataType');
+const multer = require("multer");
+const path = require("path");
+const Product = require("../models/Product"); // ✅ Ensure Product model is used
 
-// GET route to fetch product data
-router.get('/products', async (req, res) => {
+// ✅ Fetch All Products
+router.get("/products", async (req, res) => {
   try {
-      const productData = await DataType.findOne({ type: 'product' });
-      if (!productData) {
-          return res.status(404).json({ message: "No product data found" });
-      }
-
-      // Filter out any base64 images before sending response
-      const filteredProducts = productData.content.products.map(product => ({
-          ...product,
-          images: product.images.filter(img => !img.startsWith("data:image"))
-      }));
-
-      res.json(filteredProducts);
+    const products = await Product.find(); // ✅ Fetch from Product model
+    if (!products.length) {
+      return res.status(404).json({ message: "No products found" });
+    }
+    res.json(products);
   } catch (error) {
-      console.error("❌ Error fetching products:", error);
-      res.status(500).json({ message: "Internal server error" });
+    console.error("❌ Error fetching products:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ✅ Fetch Single Product by ID
+router.get("/products/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.json(product);
+  } catch (error) {
+    console.error("❌ Error fetching product:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 
-// **PUT: Update a product by name**
-router.put('/products/:name', async (req, res) => {
-    try {
-        const { name } = req.params; // Get product name from URL
-        const { description, type, size, images } = req.body; // Get updated data from request body
+// ✅ Multer Storage Setup
+const storage = multer.diskStorage({
+  destination: "uploads/", // Folder to store images
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
 
-        // Find the product document
-        const productData = await DataType.findOne({ type: 'product' });
-        if (!productData) {
-            return res.status(404).json({ message: "No product data found" });
-        }
+const upload = multer({ storage });
 
-        // Find the specific product inside the array
-        const productIndex = productData.content.products.findIndex(p => p.name === name);
-        if (productIndex === -1) {
-            return res.status(404).json({ message: "Product not found" });
-        }
 
-        // Update product details
-        if (description) productData.content.products[productIndex].description = description;
-        if (type) productData.content.products[productIndex].type = type;
-        if (size) productData.content.products[productIndex].size = size;
-        if (images) productData.content.products[productIndex].images = images;
+// ✅ Update Product (Fix for 500 Error)
+router.put("/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
 
-        // Save changes to database
-        await productData.save();
-
-        res.json({ message: "✅ Product updated successfully", product: productData.content.products[productIndex] });
-    } catch (error) {
-        console.error("❌ Error updating product:", error);
-        res.status(500).json({ message: "Internal server error" });
+    // ✅ Ensure `id` is valid
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid product ID" });
     }
+
+    // ✅ Update product in MongoDB
+    const updatedProduct = await Product.findByIdAndUpdate(id, updatedData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json({ message: "✅ Product updated successfully", updatedProduct });
+  } catch (error) {
+    console.error("❌ Error updating product:", error);
+    res.status(500).json({ error: "Internal server error", details: error.message });
+  }
 });
 
 module.exports = router;

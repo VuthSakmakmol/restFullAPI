@@ -6,6 +6,7 @@ import AdminDashboard from '../views/AdminDashboard.vue';
 import Services from '../views/Services.vue';
 import Product from '../views/Product.vue';
 import ProductDetail from "../views/ProductDetail.vue";
+import ProductEdit from "../views/ProductEdit.vue";
 import Blog from '../views/Blog.vue';
 import FAQ from '../views/FAQ.vue';
 import Contact from '../views/Contact.vue';
@@ -22,8 +23,9 @@ const routes = [
   },
   { path: "/products", component: Product },
   { path: "/product/:name", component: ProductDetail },
+  { path: "/product/:name/edit", component: ProductEdit },
 
-  
+
   { path: '/services', component: Services },
   { path: '/product', component: Product },
   { path: '/blog', component: Blog },

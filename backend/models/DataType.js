@@ -1,8 +1,21 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const dataSchema = new mongoose.Schema({
-    type: String,
-    content: Object
+const ProductSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId, 
+  name: String,
+  description: String,
+  type: String,
+  size: String,
+  images: [String]
 });
 
-module.exports = mongoose.model('DataType', dataSchema);
+const DataTypeSchema = new mongoose.Schema({
+  type: { type: String, required: true },
+  content: {
+    title: String,
+    card_description: String,
+    products: [ProductSchema] // Make sure this is an array of subdocuments
+  }
+});
+
+module.exports = mongoose.model("DataType", DataTypeSchema);
